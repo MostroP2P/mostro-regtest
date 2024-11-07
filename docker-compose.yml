@@ -1,0 +1,59 @@
+services:
+  bitcoind:
+    hostname: bitcoind
+    image: boltz/bitcoin-core:27.1
+    command: "-regtest -fallbackfee=0.00000253 -zmqpubrawtx=tcp://0.0.0.0:29000 -zmqpubrawblock=tcp://0.0.0.0:29001 -zmqpubhashblock=tcp://0.0.0.0:29002 -txindex -rpcallowip=0.0.0.0/0 -rpcbind=0.0.0.0 -rpcuser=mostro -rpcpassword=mostro -addresstype=bech32 -changetype=bech32 -dbcache=2048 -rpcworkqueue=256"
+    ports:
+      - 18443:18443
+      - 18444:18444
+    expose:
+      - 29000
+      - 29001
+      - 29002
+      - 18443
+      - 18444
+
+  lnd:
+    hostname: lnd
+    depends_on:
+      - bitcoind
+    image: boltz/lnd:0.18.2-beta
+    restart: on-failure
+    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10009 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoind --bitcoind.zmqpubrawtx=bitcoind:29000 --bitcoind.zmqpubrawblock=bitcoind:29001 --bitcoind.rpcuser=mostro --bitcoind.rpcpass=mostro --noseedbackup --protocol.wumbo-channels'"
+    ports:
+      - "10009:10009"    
+      - "9735:9735"
+      - "8081:8081"
+    expose:
+      - 8081
+      - 9735
+      - 10009
+    volumes:
+      - ./data/lnd:/root/.lnd/
+
+  mostro:
+    hostname: mostro
+    depends_on:
+      - lnd
+    build:
+      #context: ..
+      dockerfile: ./mostro/docker/Dockerfile
+    volumes:
+      - ./mostro/config/:/config  # settings.toml and mostro.db
+      - ./mostro/docker/data/lnd:/lnd # LND data
+    platform: linux/amd64
+
+  nostr-relay:
+    hostname: nostr-relay
+    depends_on:
+      - lnd
+    image: scsibug/nostr-rs-relay:latest
+    container_name: nostr-relay
+    ports:
+      - '${MOSTRO_RELAY_LOCAL_PORT:-7100}:8080'
+    volumes:
+      - './mostro/data:/usr/src/app/db:Z'
+      - './mostro/relay/config.toml:/usr/src/app/config.toml:ro,Z'
+
+volumes:
+  lnbits-data:
