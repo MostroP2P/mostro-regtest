@@ -10,12 +10,6 @@ Here is the complete list of nodes:
 * bitcoind
 * lnd: Lightning Node
 
-
-# Additional services
-
-* mempool (api|web|db): Mempool Explorer
-* fulcrum: Electrum Server
-
 # Installing regtest 
 Get the regtest environment ready
 ```sh
@@ -33,7 +27,7 @@ Stop the regtest environment
 ./stop.sh # stop the regtest containers
 ```
 
-# Running Nutshell on regtest
+# Running Mostro on regtest
 Add this ENV variables to your `.env` file (assuming that the `mostro-regtest` directory is in `../` from the `mostro` directory)
 ```sh
 # LND
