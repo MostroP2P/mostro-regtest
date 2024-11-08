@@ -23,7 +23,7 @@ Get the regtest environment ready
 # Make sure your user has permission to use docker 'sudo usermod -aG docker ${USER}' then reboot
 # Stop/start docker 'sudo systemctl stop docker' 'sudo systemctl start docker'
 
-git clone https://github.com/MostroP2P/mostro-regtest/
+git clone https://github.com/MostroP2P/mostro-regtest.git
 cd mostro-regtest
 ./start.sh  # start the regtest and also run tests
 ```
