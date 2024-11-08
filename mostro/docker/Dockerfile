@@ -23,10 +23,10 @@ COPY --from=builder /mostro/target/release/mostrod /usr/local/bin/mostrod
 WORKDIR /mostro
 
 # Copy settings and empty database
-COPY --chown=mostrouser:mostrouser ./docker/settings.docker.toml ./docker/empty.mostro.db ./
+COPY --chown=mostrouser:mostrouser ./mostro/docker/settings.docker.toml ./mostro/docker/empty.mostro.db ./
 
 # Copy start script
-COPY --chown=mostrouser:mostrouser ./docker/start.sh ./start.sh
+COPY --chown=mostrouser:mostrouser ./mostro/docker/start.sh ./start.sh
 RUN chmod +x ./start.sh
 
 # Add a non-root user and switch to it
