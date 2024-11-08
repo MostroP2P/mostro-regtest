@@ -1,4 +1,4 @@
-# mostro-regtest
+# Mostro Regtest
 
 ![TESTS](https://github.com/lnbits/legend-regtest-enviroment/actions/workflows/ci.yml/badge.svg)
 
