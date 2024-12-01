@@ -5,7 +5,7 @@ FROM rust:1.81 AS builder
 WORKDIR /mostro
 
 # Copy source code
-COPY . .
+COPY ./mostro/ .
 
 # Install build dependencies
 RUN apt-get update && \

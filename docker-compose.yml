@@ -19,15 +19,15 @@ services:
       - bitcoind
     image: boltz/lnd:0.18.2-beta
     restart: on-failure
-    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10009 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoind --bitcoind.zmqpubrawtx=bitcoind:29000 --bitcoind.zmqpubrawblock=bitcoind:29001 --bitcoind.rpcuser=mostro --bitcoind.rpcpass=mostro --noseedbackup --protocol.wumbo-channels'"
+    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10001 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoind --bitcoind.zmqpubrawtx=bitcoind:29000 --bitcoind.zmqpubrawblock=bitcoind:29001 --bitcoind.rpcuser=mostro --bitcoind.rpcpass=mostro --noseedbackup --protocol.wumbo-channels'"
     ports:
-      - "10009:10009"    
+      - "10001:10001" 
       - "9735:9735"
       - "8081:8081"
     expose:
       - 8081
       - 9735
-      - 10009
+      - 10001
     volumes:
       - ./data/lnd:/root/.lnd/
 
