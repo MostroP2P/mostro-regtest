@@ -32,22 +32,25 @@ services:
     volumes:
       - bitcoin:/home/bitcoin/.bitcoin
 
-  lnd:
-    hostname: lnd
+  mostro_lnd:
+    build:
+      context: ./docker/lnd
+    container_name: mostro_lnd
+    restart: unless-stopped
+    command: 'lnd --alias=mostro_lnd --externalip=mostro_lnd --tlsextradomain=mostro_lnd --tlsextradomain=host.docker.internal'
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "lncli --network=regtest --rpcserver=localhost:10001 --lnddir=/home/lnd/.lnd getinfo"]
     depends_on: *depends_on_bitcoin
-    image: boltz/lnd:0.18.2-beta
-    restart: on-failure
-    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10001 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoin --bitcoind.zmqpubrawtx=bitcoin:29000 --bitcoind.zmqpubrawblock=bitcoin:29001 --bitcoind.rpcuser=bitcoin --bitcoind.rpcpass=bitcoin --noseedbackup --protocol.wumbo-channels'"
-    ports:
-      - "10001:10001" 
-      - "9735:9735"
-      - "8081:8081"
     expose:
-      - 8081
-      - 9735
-      - 10001
+      - 9735  # P2P
+      - 10001 # RPC
+      - 8081  # REST
+    ports:
+      - '${MOSTRO_LND_RPC_LOCAL_PORT:-10001}:10001'
+      - '${MOSTRO_LND_REST_LOCAL_PORT:-8081}:8081'
     volumes:
-      - ./data/lnd:/root/.lnd/
+      - mostro_lnd:/home/lnd/.lnd
 
   mostro:
     hostname: mostro
@@ -78,4 +81,5 @@ services:
 
 volumes:
   bitcoin:
+  mostro_lnd:
   nostr_relay:
