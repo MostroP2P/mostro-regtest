@@ -3,29 +3,41 @@ x-healthcheck: &healthcheck
   timeout: 10s
   retries: 10
   start_period: 1m
+x-depends-on-bitcoin: &depends_on_bitcoin
+  bitcoin:
+    condition: service_healthy
+    restart: true
 
-services:
-  bitcoind:
-    hostname: bitcoind
-    image: boltz/bitcoin-core:27.1
-    command: "-regtest -fallbackfee=0.00000253 -zmqpubrawtx=tcp://0.0.0.0:29000 -zmqpubrawblock=tcp://0.0.0.0:29001 -zmqpubhashblock=tcp://0.0.0.0:29002 -txindex -rpcallowip=0.0.0.0/0 -rpcbind=0.0.0.0 -rpcuser=mostro -rpcpassword=mostro -addresstype=bech32 -changetype=bech32 -dbcache=2048 -rpcworkqueue=256"
-    ports:
-      - 18443:18443
-      - 18444:18444
+services:  
+  bitcoin:
+    build:
+      context: ./docker/bitcoin
+    container_name: bitcoin
+    restart: unless-stopped
+    command: "bitcoind -debug=${MOSTRO_BITCOIN_DEBUG:-0}"
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "bitcoin-cli -regtest -rpcport=18443 -rpcuser=bitcoin -rpcpassword=bitcoin getblockchaininfo"]
     expose:
-      - 29000
-      - 29001
-      - 29002
-      - 18443
-      - 18444
+      - 18443 # RPC
+      - 18444 # P2P
+      - 29000 # ZMQ TX
+      - 29001 # ZMQ BLOCK
+      - 29002 # ZMQ HASH BLOCK
+    ports:
+      - '${MOSTRO_BITCOIN_RPC_LOCAL_PORT:-18443}:18443'
+      - '${MOSTRO_BITCOIN_ZMQTX_LOCAL_PORT:-29000}:29000'
+      - '${MOSTRO_BITCOIN_ZMQBLOCK_LOCAL_PORT:-29001}:29001'
+      - '${MOSTRO_BITCOIN_ZMQHASHBLOCK_LOCAL_PORT:-29002}:29002'
+    volumes:
+      - bitcoin:/home/bitcoin/.bitcoin
 
   lnd:
     hostname: lnd
-    depends_on:
-      - bitcoind
+    depends_on: *depends_on_bitcoin
     image: boltz/lnd:0.18.2-beta
     restart: on-failure
-    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10001 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoind --bitcoind.zmqpubrawtx=bitcoind:29000 --bitcoind.zmqpubrawblock=bitcoind:29001 --bitcoind.rpcuser=mostro --bitcoind.rpcpass=mostro --noseedbackup --protocol.wumbo-channels'"
+    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10001 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoin --bitcoind.zmqpubrawtx=bitcoin:29000 --bitcoind.zmqpubrawblock=bitcoin:29001 --bitcoind.rpcuser=bitcoin --bitcoind.rpcpass=bitcoin --noseedbackup --protocol.wumbo-channels'"
     ports:
       - "10001:10001" 
       - "9735:9735"
@@ -65,4 +77,5 @@ services:
       - nostr_relay:/home/dev/.nostr_relay
 
 volumes:
+  bitcoin:
   nostr_relay:
