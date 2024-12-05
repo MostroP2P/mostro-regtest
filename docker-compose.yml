@@ -52,6 +52,27 @@ services:
     volumes:
       - mostro_lnd:/home/lnd/.lnd
 
+  thunderhub:
+    build:
+      context: ./docker/thunderhub
+    container_name: thunderhub
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "netstat -an | grep :3000"]
+    environment:
+      SSO_SERVER_URL: mostro_lnd:10001
+    expose:
+      - 3000  # HTTP
+    ports:
+      - '${MOSTRO_THUNDERHUB_LOCAL_PORT:-3000}:3000'
+    depends_on:
+      mostro_lnd:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - mostro_lnd:/lnd
+
   nostr_relay:
     build:
       context: ./docker/nostr_relay
