@@ -24,8 +24,8 @@ mostro_cli() {
 }
 
 mostro_private_key_from_mnemonic_index() {
-  local mnemonic="$1"
-  local index="$2"
+  local mnemonic="${@:1:$#-1}"
+  local index="${!#}"
   private_key_from_mnemonic_path "$mnemonic" "$MOSTRO_DERIVATION_PATH/$index"
 }
 
