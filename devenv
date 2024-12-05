@@ -19,7 +19,7 @@ readonly SCRIPT_DESCRIPTION="Mostro dev environment"
 
 readonly COMMANDS=( \
   help version start restart stop sh info private_key public_key bitcoin_cli \
-  mostro_lncli alice_lncli bob_lncli nak create_random_orders clean \
+  mostro_lncli alice_lncli bob_lncli nak mostro_cli create_random_orders clean \
 )
 readonly LONG_OPTS=(help version log-level:)
 readonly SHORT_OPTS=hv 
@@ -69,6 +69,7 @@ function execute_command() {
     alice_lncli)    execute_lncli alice_lnd "$@" ;;
     bob_lncli)      execute_lncli bob_lnd "$@" ;;
     nak)            execute_nak "$@" ;;
+    mostro_cli)     execute_mostro_cli "$@" ;;
     create_random_orders) execute_create_random_orders "$@" ;;
     clean)          execute_clean "$@" ;;
     *)              execute_help ;;
@@ -136,6 +137,10 @@ function execute_nak() {
   nak "$@"
 }
 
+function execute_mostro_cli() {
+  mostro_cli "$@"
+}
+
 function execute_create_random_orders() {
   mostro_create_random_orders
 }
@@ -172,6 +177,7 @@ Available Commands:
   alice_lncli [args]                Alice lnd client.
   bob_lncli [args]                  Bob lnd client.
   nak [args]                        Nostr relay client.
+  mostro_cli [args]                 Mostro client.
   create_random_orders              Create random generated Mostro orders.
   clean                             Clean dev environment.
   help                              Display detailed help.
