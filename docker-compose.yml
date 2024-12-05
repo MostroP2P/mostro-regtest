@@ -12,7 +12,6 @@ services:
   bitcoin:
     build:
       context: ./docker/bitcoin
-    container_name: bitcoin
     restart: unless-stopped
     command: "bitcoind -debug=${MOSTRO_BITCOIN_DEBUG:-0}"
     healthcheck:
@@ -35,7 +34,6 @@ services:
   mostro_lnd:
     build:
       context: ./docker/lnd
-    container_name: mostro_lnd
     restart: unless-stopped
     command: 'lnd --alias=mostro_lnd --externalip=mostro_lnd --tlsextradomain=mostro_lnd --tlsextradomain=host.docker.internal'
     healthcheck:
@@ -55,7 +53,6 @@ services:
   alice_lnd:
     build:
       context: ./docker/lnd
-    container_name: alice_lnd
     restart: unless-stopped
     command: 'lnd --alias=alice_lnd --externalip=alice_lnd --tlsextradomain=alice_lnd --tlsextradomain=host.docker.internal'
     healthcheck:
@@ -72,7 +69,6 @@ services:
   bob_lnd:
     build:
       context: ./docker/lnd
-    container_name: bob_lnd
     restart: unless-stopped
     command: 'lnd --alias=bob_lnd --externalip=bob_lnd --tlsextradomain=bob_lnd --tlsextradomain=host.docker.internal'
     healthcheck:
@@ -89,7 +85,6 @@ services:
   thunderhub:
     build:
       context: ./docker/thunderhub
-    container_name: thunderhub
     restart: unless-stopped
     healthcheck:
       <<: *healthcheck
@@ -110,7 +105,6 @@ services:
   nostr_relay:
     build:
       context: ./docker/nostr_relay
-    container_name: nostr_relay
     restart: unless-stopped
     healthcheck:
       <<: *healthcheck
@@ -125,7 +119,6 @@ services:
   mostro:
     build:
       context: ./docker/mostro
-    container_name: mostro
     restart: unless-stopped
     healthcheck:
       <<: *healthcheck
