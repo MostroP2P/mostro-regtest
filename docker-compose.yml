@@ -52,18 +52,6 @@ services:
     volumes:
       - mostro_lnd:/home/lnd/.lnd
 
-  mostro:
-    hostname: mostro
-    depends_on:
-      - lnd
-    build:
-      #context: ..
-      dockerfile: ./mostro/docker/Dockerfile
-    volumes:
-      - ./mostro/config/:/config  # settings.toml and mostro.db
-      - ./mostro/docker/data/lnd:/lnd # LND data
-    platform: linux/amd64
-  
   nostr_relay:
     build:
       context: ./docker/nostr_relay
@@ -78,8 +66,28 @@ services:
       - '${MOSTRO_NOSTR_RELAY_LOCAL_PORT:-8080}:8080'
     volumes:
       - nostr_relay:/home/dev/.nostr_relay
+  
+  mostro:
+    build:
+      context: ./docker/mostro
+    container_name: mostro
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "nak req -k 38383 -a 724497f34e6c4f55f9aa90f5e9dcc326c76a9f2ed817b0f0eb940ee7218ac8d5 ws://nostr_relay:8080 | jq -r '.tags[][0]' | grep mostro_pubkey"]
+    depends_on:
+      mostro_lnd:
+        condition: service_healthy
+        restart: true
+      nostr_relay:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - mostro:/home/mostro/.mostro
+      - mostro_lnd:/lnd
 
 volumes:
   bitcoin:
   mostro_lnd:
   nostr_relay:
+  mostro:
