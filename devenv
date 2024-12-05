@@ -11,17 +11,22 @@ source "$SCRIPTS_DIR/docker.sh" || exit 1
 source "$SCRIPTS_DIR/bitcoin.sh" || exit 1
 source "$SCRIPTS_DIR/lightning.sh" || exit 1
 source "$SCRIPTS_DIR/nostr.sh" || exit 1
+source "$SCRIPTS_DIR/mostro.sh" || exit 1
 
 readonly SCRIPT_NAME=${0##*/}
 readonly SCRIPT_VERSION=0.0.1
 readonly SCRIPT_DESCRIPTION="Mostro dev environment"
 
 readonly COMMANDS=( \
-  help version start restart stop sh private_key public_key bitcoin_cli \
-  mostro_lncli alice_lncli bob_lncli nak clean \
+  help version start restart stop sh info private_key public_key bitcoin_cli \
+  mostro_lncli alice_lncli bob_lncli nak create_random_orders clean \
 )
 readonly LONG_OPTS=(help version log-level:)
 readonly SHORT_OPTS=hv 
+
+readonly MOSTRO_MNEMONIC="monster monster monster monster monster monster monster monster monster monster monster trade"
+readonly ALICE_MNEMONIC="test test test test test test test test test test test alone"
+readonly BOB_MNEMONIC="test test test test test test test test test test test boy"
 
 # -----------------------------------------------------------------------------
 # Initialization
@@ -56,6 +61,7 @@ function execute_command() {
     restart)        execute_restart "$@" ;;
     stop)           execute_stop "$@" ;;
     sh)             execute_sh "$@" ;;
+    info)           execute_info "$@" ;;
     private_key)    execute_private_key "$@" ;;
     public_key)     execute_public_key "$@" ;;
     bitcoin_cli)    execute_bitcoin_cli "$@" ;;
@@ -63,6 +69,7 @@ function execute_command() {
     alice_lncli)    execute_lncli alice_lnd "$@" ;;
     bob_lncli)      execute_lncli bob_lnd "$@" ;;
     nak)            execute_nak "$@" ;;
+    create_random_orders) execute_create_random_orders "$@" ;;
     clean)          execute_clean "$@" ;;
     *)              execute_help ;;
   esac
@@ -93,6 +100,22 @@ function execute_sh() {
   docker_compose exec $service_name bash 2>/dev/null || docker_compose exec $service_name sh
 }
 
+function execute_info() {
+  printf -- "identity key\n - derivation path: $MOSTRO_DERIVATION_PATH/0\n\n"
+  
+  local private_key=$(mostro_identity_private_key)
+  local public_key=$(mostro_identity_public_key)
+  printf -- "mostro\n - mnemonic: $MOSTRO_MNEMONIC\n - private key: $private_key\n - public key: $public_key\n\n"
+  
+  private_key=$(alice_identity_private_key)
+  public_key=$(alice_identity_public_key)
+  printf -- "alice\n - mnemonic: $ALICE_MNEMONIC\n - private key: $private_key\n - public key: $public_key\n\n"
+  
+  private_key=$(bob_identity_private_key)
+  public_key=$(bob_identity_public_key)
+  printf -- "bob\n - mnemonic: $BOB_MNEMONIC\n - private key: $private_key\n - public key: $public_key\n"
+}
+
 function execute_private_key() {
   private_key_from_mnemonic_path "$@"
 }
@@ -113,6 +136,10 @@ function execute_nak() {
   nak "$@"
 }
 
+function execute_create_random_orders() {
+  mostro_create_random_orders
+}
+
 function execute_clean() {
   info clean up dev environment
   docker_compose down -v
@@ -120,7 +147,7 @@ function execute_clean() {
 }
 
 function version_message() {
-  printf "%s version %s\n" ${SCRIPT_NAME-0##*/} ${SCRIPT_VERSION-unknown}
+  printf "%s mostro version %s\n" ${SCRIPT_NAME-0##*/} ${SCRIPT_VERSION-unknown}
 }
 
 function help_message() {
@@ -136,6 +163,7 @@ Available Commands:
   restart                           Restart dev environment.
   stop                              Stop dev environment.
   sh <service_name>                 Open a shell inside a running container.
+  info                              Dev env info.
   private_key <mnemonic> <path>     Generate private key from mnemonic and
                                     derivation path.     
   public_key <private_key>          Generate public key from private key.
@@ -144,6 +172,7 @@ Available Commands:
   alice_lncli [args]                Alice lnd client.
   bob_lncli [args]                  Bob lnd client.
   nak [args]                        Nostr relay client.
+  create_random_orders              Create random generated Mostro orders.
   clean                             Clean dev environment.
   help                              Display detailed help.
   version                           Print version information.
