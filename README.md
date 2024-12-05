@@ -2,13 +2,14 @@
 
 ![TESTS](https://github.com/lnbits/legend-regtest-enviroment/actions/workflows/ci.yml/badge.svg)
 
-# Nodes
+# Services
 
-Here is the complete list of nodes:
+Here is the complete list of services:
 * mostro
 * nostr-relay
 * bitcoind
 * lnd: Lightning Node
+* thunderhub
 
 # Installing regtest 
 Get the regtest environment ready
@@ -19,31 +20,46 @@ Get the regtest environment ready
 
 git clone https://github.com/MostroP2P/mostro-regtest.git
 cd mostro-regtest
-./start.sh  # start the regtest and also run tests
+./devenv start
 ```
+
 ## Stopping regtest
 Stop the regtest environment
 ```
-./stop.sh # stop the regtest containers
+./devenv stop
 ```
 
-# Running Mostro on regtest
-Add this ENV variables to your `.env` file (assuming that the `mostro-regtest` directory is in `../` from the `mostro` directory)
-```sh
-# LND
-# NOSTR RELAY
-# MOSTRO CORE
+# Mostro config
+```txt
+- mnemonic: monster monster monster monster monster monster monster monster monster monster monster trade
+- private key: e074ab631273b52479eccda1e1aea6ed5e8400906f5a9dd20422e14e56b5da59
+- public key: 724497f34e6c4f55f9aa90f5e9dcc326c76a9f2ed817b0f0eb940ee7218ac8d5
 ```
 
+Use the public key to communicate with Regtest Mostro instance.
 
-# URLs
+# Docker published ports:
 
-* lnd rest: http://localhost:8081/
+- bitcoind
+  - 18443 -> RPC
+  - 29000 -> ZMQ TX
+  - 29001 -> ZMQ BLOCK
+  - 29002 -> ZMQ HASH BLOCK
+- lnd
+  - 10001 -> RPC
+  - 8081 -> REST
+- nostr_relay
+  - 8080 -> WS
+- thunderhub
+  - 3000 -> HTTP
+
+Access Thunderhub as a logged in user from:
+`http://localhost:3000/sso?token=1`
 
 # Debugging Docker logs
 ```sh
-docker logs mostro-regtest-bitcoind-1-f
-docker logs mostro-regtest-lnd-1 -f
-docker logs mostro-regtest-mostro-1 -f
-docker logs nostr-relay -f
+docker compose logs bitcoin -f
+docker compose logs mostro_lnd -f
+docker compose logs nostr_relay -f
+docker compose logs mostro -f
 ```
