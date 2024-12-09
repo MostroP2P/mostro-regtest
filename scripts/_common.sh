@@ -298,7 +298,7 @@ function parse_and_execute() {
     only_args=1
   fi
 
-  if [[ "$only_args" == 0 ]]; then
+  if [[ "$only_args" == 0 && ${#args[@]} -gt 0 ]]; then
     # check if the first argument is a valid command
     only_args=1
     for valid_cmd in "${COMMANDS[@]}"; do
@@ -312,6 +312,8 @@ function parse_and_execute() {
 
   if [[ "$only_args" == 1 && "$send_command" == 1 ]]; then
     # send '--' as the default command
+    args=('--' ${args[@]})
+  elif [[ ${#args[@]} == 0 && "$send_command" == 1 ]]; then
     args=('--' ${args[@]})
   fi
 
