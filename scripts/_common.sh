@@ -186,7 +186,7 @@ function required {
       e=1 && error "$tool is required"
     }
   done
-  [[ $e < 1 ]] || fatal "please install missing tools required for running this script and try again"
+  [[ $e -lt 1 ]] || fatal "please install missing tools required for running this script and try again"
 }
 
 # Parse template file variables in the format "{{ VAR }}" with the value of "VAR".
@@ -408,11 +408,11 @@ function execute_help() {
   local so=${SHORT_OPTS-}
   local lo=${LONG_OPTS-}
   local c=${COMMANDS-}
-  [[ "${#so}" > 0 || "${#lo}" > 0 ]] && printf "[options] "
-  [[ "${#c}" > 0 ]] && printf "[command] "
+  [[ "${#so}" -gt 0 || "${#lo}" -gt 0 ]] && printf "[options] "
+  [[ "${#c}" -gt 0 ]] && printf "[command] "
   printf "[args]\n\n"
   # commands
-  if [[ "${#c}" > 0 ]]; then
+  if [[ "${#c}" -gt 0 ]]; then
     printf "Available Commands:\n"
     for cmd in "${COMMANDS[@]}"; do
       printf "  %s\n" "$cmd"
@@ -420,7 +420,7 @@ function execute_help() {
     printf "\n"
   fi
   # long options
-  if [[ "${#lo}" > 0 ]]; then
+  if [[ "${#lo}" -gt 0 ]]; then
     printf "Long Options:\n"
     for opt in "${LONG_OPTS[@]}"; do
       local has_arg=""
@@ -430,14 +430,14 @@ function execute_help() {
     printf "\n"
   fi
   # short options
-  if [[ "${#so}" > 0 ]]; then
+  if [[ "${#so}" -gt 0 ]]; then
     printf "Short Options:\n"
     local next
     for ((i = 0; i < ${#so}; i++)); do
       local opt=${so:$i:1}
       next=$((i+1))
       local has_arg=""
-      [[ $next < ${#so} && ${so:$next:1} == ":" ]] && has_arg=" arg" && i=$next
+      [[ $next -lt ${#so} && ${so:$next:1} == ":" ]] && has_arg=" arg" && i=$next
       printf "  -%s%s\n" "$opt" "$has_arg"
     done
     printf "\n"
