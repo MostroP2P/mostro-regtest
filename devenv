@@ -96,7 +96,12 @@ function execute_stop() {
 }
 
 function execute_sh() {
-  local service_name=$1
+  local service_name="${1-}"
+  [[ -z "$service_name" ]] && fatal "Service name is required"
+  if ! docker_compose ps --services | grep -q "^${service_name}$"; then
+    fatal "Service '$service_name' not found"
+  fi
+
   info sh into $service_name
   docker_compose exec $service_name bash 2>/dev/null || docker_compose exec $service_name sh
 }
@@ -146,6 +151,11 @@ function execute_create_random_orders() {
 }
 
 function execute_clean() {
+  read -p "This will remove containers and volumes. Are you sure? [y/N] " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    fatal "operation cancelled"
+  fi
   info clean up dev environment
   docker_compose down -v
   docker_compose rm -fsv
