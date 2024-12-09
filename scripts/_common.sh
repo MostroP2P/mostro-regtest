@@ -43,7 +43,7 @@ function log_level() {
         break
       fi
     done
-    [[ "$found" == 0 ]] && fatal "invalid log level '$level', must be one of: ${SEVERITY_RANGES_NAMES[@]}"
+    [[ "$found" == 0 ]] && fatal "invalid log level '$level', must be one of: ${SEVERITY_RANGES_NAMES[*]}"
     LOG_LEVEL=$level
   fi
 }
