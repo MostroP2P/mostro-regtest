@@ -18,8 +18,9 @@ readonly MOSTRO_TEST_FIAT_CODES=(VES PEN ARS USD)
 readonly MOSTRO_TEST_PAYMENT_METHODS=(F2F BANK_TRANSFER)
 
 mostro_cli() {
-  local mostro_pubkey=$(mostro_identity_public_key)
-  local relay="ws://nostr_relay:8080"
+  local mostro_pubkey relay
+  mostro_pubkey=$(mostro_identity_public_key)
+  relay="ws://nostr_relay:8080"
   docker_compose exec --user mostro mostro mostro-cli -m "$mostro_pubkey" -r "$relay" "$@"
 }
 
@@ -47,12 +48,14 @@ mostro_create_random_sell_order() {
   local kind="sell"
 
   local fiat_codes_len=${#MOSTRO_TEST_FIAT_CODES[@]}
-  local fiat_code_index=$(($RANDOM % $fiat_codes_len))
+  local fiat_code_index
+  fiat_code_index=$(($RANDOM % $fiat_codes_len))
   local fiat_code="${MOSTRO_TEST_FIAT_CODES[$fiat_code_index]}"
   
   local fiat_amount=0
   
-  local amount=$(($RANDOM % 401 + 100))
+  local amount
+  amount=$(($RANDOM % 401 + 100))
   # local is_range=$(($RANDOM % 2))
   # local amount=0 min_amount=0 max_amount=0
   # if [ $is_range -eq 1 ]; then
@@ -62,10 +65,13 @@ mostro_create_random_sell_order() {
     # amount=$(($RANDOM % 401 + 100))
   # fi
 
-  local premium=$(($RANDOM % 5 + 1))
+  local premium
+  premium=$(($RANDOM % 5 + 1))
+
 
   local payment_methods_len=${#MOSTRO_TEST_PAYMENT_METHODS[@]}
-  local payment_method_index=$(($RANDOM % $payment_methods_len))
+  local payment_method_index
+  payment_method_index=$(($RANDOM % $payment_methods_len))
   local payment_method="${MOSTRO_TEST_PAYMENT_METHODS[$payment_method_index]}"
 
   mostro_cli -n "$from_private_key" neworder \

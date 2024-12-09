@@ -11,14 +11,15 @@
 # waits for the container to be in a healthy condition.
 # https://github.com/docker/compose/issues/8351#issuecomment-851115217
 docker_wait_for_healthy_service() {
-  local service_name="$1"
-  local container_id=$(docker compose ps $service_name -q)
+  local service_name container_id wait container_state health_status
+  service_name="$1"
+  container_id=$(docker compose ps $service_name -q)
   info "waiting for ${service_name} service$(log_key container_id $container_id)"
-  local wait=1
+  wait=1
   while [[ $wait -eq 1 ]]; do
-    local container_state="$(docker inspect "${container_id}" --format '{{ .State.Status }}')"
+    container_state="$(docker inspect "${container_id}" --format '{{ .State.Status }}')"
     if [[ "$container_state" == "running" ]]; then
-      local health_status="$(docker inspect "${container_id}" --format '{{ .State.Health.Status }}')"
+      health_status="$(docker inspect "${container_id}" --format '{{ .State.Health.Status }}')"
       info "${service_name}$(log_key container_state $container_state)$(log_key health_status $health_status)"
       if [[ ${health_status} == "healthy" ]]; then
         wait=0

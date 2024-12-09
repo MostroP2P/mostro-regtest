@@ -38,7 +38,8 @@ bitcoin_init() {
 
   bitcoin_load_wallet dev
 
-  local blockcount=$(bitcoin_cli getblockcount 2>/dev/null)
+  local blockcount
+  blockcount=$(bitcoin_cli getblockcount 2>/dev/null)
   if [[ $blockcount -le 0 ]]; then
     info "mine first 150 blocks with dev wallet"
     bitcoin_cli -rpcwallet=dev -generate 150 > /dev/null
@@ -50,10 +51,10 @@ bitcoin_generate_txs_for_fee_rate_estimation() {
     info generate txs for fee rate estimation
     while [[ $(bitcoin_cli estimatesmartfee 6 | jq ".errors | length") -gt 0 ]]; do
       # generate randomly between 20 and 30 transactions with a fee rate between 1 and 25
-      local i=0
-      local range=$(($RANDOM % 11 + 20))
+      local i=0 range address
+      range=$(($RANDOM % 11 + 20))
       while [[ $i -lt $range ]]; do
-        local address=$(bitcoin_cli -rpcwallet=dev getnewaddress)
+        address=$(bitcoin_cli -rpcwallet=dev getnewaddress)
         bitcoin_cli -named -rpcwallet=dev sendtoaddress address=$address amount=0.01 fee_rate=$(( $RANDOM % 25 + 1 ))
         ((++i))
       done
@@ -62,6 +63,7 @@ bitcoin_generate_txs_for_fee_rate_estimation() {
       bitcoin_cli -rpcwallet=dev -generate 1 > /dev/null
     done
   fi
-  local fee_rate_estimation=$(bitcoin_cli estimatesmartfee 6 | jq ".feerate")
+  local fee_rate_estimation
+  fee_rate_estimation=$(bitcoin_cli estimatesmartfee 6 | jq ".feerate")
   info "approximate fee per kb needed for a transaction to begin confirmation within 6 blocks: $fee_rate_estimation"
 }

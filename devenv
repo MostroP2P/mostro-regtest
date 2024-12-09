@@ -103,9 +103,9 @@ function execute_sh() {
 
 function execute_info() {
   printf -- "identity key\n - derivation path: $MOSTRO_DERIVATION_PATH/0\n\n"
-  
-  local private_key=$(mostro_identity_private_key)
-  local public_key=$(mostro_identity_public_key)
+  local private_key public_key
+  private_key=$(mostro_identity_private_key)
+  public_key=$(mostro_identity_public_key)
   printf -- "mostro\n - mnemonic: $MOSTRO_MNEMONIC\n - private key: $private_key\n - public key: $public_key\n\n"
   
   private_key=$(alice_identity_private_key)

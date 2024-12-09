@@ -53,8 +53,9 @@ lightning_fund() {
 }
 
 lnd_fund_node() {
-  local lnd_service_name=$1
-  local address=$(lncli $lnd_service_name newaddress p2wkh | jq -r .address)
+  local lnd_service_name address
+  lnd_service_name=$1
+  address=$(lncli $lnd_service_name newaddress p2wkh | jq -r .address)
   info "funding node$(log_key node $lnd_service_name)$(log_key address $address)"
   bitcoin_cli -named sendtoaddress address=$address amount=30 fee_rate=100 > /dev/null
 }
@@ -92,9 +93,10 @@ lnd_open_channel() {
 }
 
 lnd_wait_for_channel() {
-  local lnd_service_name=$1
+  local lnd_service_name pending
+  lnd_service_name=$1
   while true; do
-    local pending=$(lncli $lnd_service_name pendingchannels | jq -r '.pending_open_channels | length')
+    pending=$(lncli $lnd_service_name pendingchannels | jq -r '.pending_open_channels | length')
     if [[ "$pending" == "0" ]]; then
       break
     fi

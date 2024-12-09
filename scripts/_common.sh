@@ -93,7 +93,8 @@ function log() {
 
   if [[ $LOG_INCLUDE_TIME -ne 0 ]]; then
     # print time with defined format
-    local time=$(date "+$LOG_TIME_FMT")
+    local time
+    time=$(date "+$LOG_TIME_FMT")
     printf "\033[2;39m%s\033[0;00m " $time >&2
   fi
 
@@ -431,9 +432,10 @@ function execute_help() {
   # short options
   if [[ "${#so}" > 0 ]]; then
     printf "Short Options:\n"
+    local next
     for ((i = 0; i < ${#so}; i++)); do
       local opt=${so:$i:1}
-      local next=$((i+1))
+      next=$((i+1))
       local has_arg=""
       [[ $next < ${#so} && ${so:$next:1} == ":" ]] && has_arg=" arg" && i=$next
       printf "  -%s%s\n" "$opt" "$has_arg"
@@ -490,7 +492,8 @@ function apt_repository() {
   fi
 
   # check if already added
-  local repositories=$(sudo cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null | grep ^[^#])
+  local repositories
+  repositories=$(sudo cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null | grep ^[^#])
   echo "$repositories" | grep -qF "$repository_lookup" && return
 
   # add repository
@@ -507,13 +510,14 @@ function apt_repository() {
 # requires sudo
 # https://askubuntu.com/questions/410247/how-to-know-last-time-apt-get-update-was-executed
 function apt_update() {
+  local apt_last_update_time current_time delta formatted_delta
   if [[ $APT_HAS_NEW_REPOSITORY -eq 0 ]]; then
-    local apt_last_update_time=$(stat -c %Y '/var/cache/apt/pkgcache.bin')
-    local current_time=$(date +'%s')
-    local delta=$((current_time - apt_last_update_time))
+    apt_last_update_time=$(stat -c %Y '/var/cache/apt/pkgcache.bin')
+    current_time=$(date +'%s')
+    delta=$((current_time - apt_last_update_time))
 
     if [[ "${delta}" -lt "${APT_UPDATE_INTERVAL}" ]]; then
-      local formatted_delta="$(date -u -d @"${delta}" +'%-Hh %-Mm %-Ss')"
+      formatted_delta="$(date -u -d @"${delta}" +'%-Hh %-Mm %-Ss')"
       debug "apt update: skip because last run was $formatted_delta ago"
       return
     fi
@@ -604,7 +608,8 @@ function recursive_copy() {
     fi
 
     # ensure directory exists
-    local parent_dir="$(dirname "$to_file")"
+    local parent_dir
+    parent_dir="$(dirname "$to_file")"
     [[ -d "$parent_dir" ]] || mkdir -p "$parent_dir"
 
     # copy file
@@ -630,7 +635,8 @@ function sync_directories() {
   recursive_copy "$input_dir" "$output_dir" $copy_flags
 
   # then check which files or directories are only in output directory
-  local files_not_expected=$(diff -r "$output_dir" "$input_dir" | grep "$output_dir" | awk -F'[: ]' '{print $3"/"$5}' || true)
+  local files_not_expected
+  files_not_expected=$(diff -r "$output_dir" "$input_dir" | grep "$output_dir" | awk -F'[: ]' '{print $3"/"$5}' || true)
   for extra_file in $files_not_expected; do
     local relative_path="${extra_file##"$output_dir/"}"
     local label="file"
