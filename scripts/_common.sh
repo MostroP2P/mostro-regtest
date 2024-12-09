@@ -493,7 +493,7 @@ function apt_repository() {
 
   # check if already added
   local repositories
-  repositories=$(sudo cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null | grep ^[^#])
+  repositories=$(sudo cat /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null | grep "^[^#]")
   echo "$repositories" | grep -qF "$repository_lookup" && return
 
   # add repository
