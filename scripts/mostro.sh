@@ -85,7 +85,9 @@ mostro_create_random_sell_order() {
 
 mostro_identity_private_key() {
   if [[ -z "${MOSTRO_IDENTITY_PRIVATE_KEY-}" ]]; then
-    readonly MOSTRO_IDENTITY_PRIVATE_KEY=$(mostro_private_key_from_mnemonic_index "$MOSTRO_MNEMONIC" 0)
+    local key
+    key=$(mostro_private_key_from_mnemonic_index "$MOSTRO_MNEMONIC" 0)
+    readonly MOSTRO_IDENTITY_PRIVATE_KEY="$key"
   fi
   echo "$MOSTRO_IDENTITY_PRIVATE_KEY"
 }
@@ -93,14 +95,18 @@ mostro_identity_private_key() {
 mostro_identity_public_key() {
   local private_key=$(mostro_identity_private_key)
   if [[ -z "${MOSTRO_IDENTITY_PUBLIC_KEY-}" ]]; then
-    readonly MOSTRO_IDENTITY_PUBLIC_KEY=$(public_key_from_private_key "$private_key")
+    local key
+    key=$(public_key_from_private_key "$private_key")
+    readonly MOSTRO_IDENTITY_PUBLIC_KEY="$key"
   fi
   echo "$MOSTRO_IDENTITY_PUBLIC_KEY"
 }
 
 alice_identity_private_key() {
   if [[ -z "${ALICE_IDENTITY_PRIVATE_KEY-}" ]]; then
-    readonly ALICE_IDENTITY_PRIVATE_KEY=$(mostro_private_key_from_mnemonic_index "$ALICE_MNEMONIC" 0)
+    local key
+    key=$(mostro_private_key_from_mnemonic_index "$ALICE_MNEMONIC" 0)
+    readonly ALICE_IDENTITY_PRIVATE_KEY="$key"
   fi
   echo "$ALICE_IDENTITY_PRIVATE_KEY"
 }
@@ -108,14 +114,18 @@ alice_identity_private_key() {
 alice_identity_public_key() {
   local private_key=$(alice_identity_private_key)
   if [[ -z "${ALICE_IDENTITY_PUBLIC_KEY-}" ]]; then
-    readonly ALICE_IDENTITY_PUBLIC_KEY=$(public_key_from_private_key "$private_key")
+    local key
+    key=$(public_key_from_private_key "$private_key")
+    readonly ALICE_IDENTITY_PUBLIC_KEY="$key"
   fi
   echo "$ALICE_IDENTITY_PUBLIC_KEY"
 }
 
 bob_identity_private_key() {
   if [[ -z "${BOB_IDENTITY_PRIVATE_KEY-}" ]]; then
-    readonly BOB_IDENTITY_PRIVATE_KEY=$(mostro_private_key_from_mnemonic_index "$BOB_MNEMONIC" 0)
+    local key
+    key=$(mostro_private_key_from_mnemonic_index "$BOB_MNEMONIC" 0)
+    readonly BOB_IDENTITY_PRIVATE_KEY="$key"
   fi
   echo "$BOB_IDENTITY_PRIVATE_KEY"
 }
@@ -123,7 +133,9 @@ bob_identity_private_key() {
 bob_identity_public_key() {
   local private_key=$(bob_identity_private_key)
   if [[ -z "${BOB_IDENTITY_PUBLIC_KEY-}" ]]; then
-    readonly BOB_IDENTITY_PUBLIC_KEY=$(public_key_from_private_key "$private_key")
+    local key
+    key=$(public_key_from_private_key "$private_key")
+    readonly BOB_IDENTITY_PUBLIC_KEY="$key"
   fi
   echo "$BOB_IDENTITY_PUBLIC_KEY"
 }
