@@ -17,7 +17,7 @@ hdwallet() {
 }
 
 private_key_from_mnemonic_path() {
-  local mnemonic="${@:1:$#-1}"
+  local mnemonic="${*:1:$#-1}"
   local path="${!#}"
   hdwallet -mnemonic "$mnemonic" -path "$path" | grep "private key:" | awk '{print $3}'
 }
