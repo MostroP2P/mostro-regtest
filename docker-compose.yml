@@ -7,6 +7,18 @@ x-depends-on-bitcoin: &depends_on_bitcoin
   bitcoin:
     condition: service_healthy
     restart: true
+x-lnd-service: &lnd-service
+  build:
+    context: ./docker/lnd
+  restart: unless-stopped
+  healthcheck:
+    <<: *healthcheck
+    test: ["CMD-SHELL", "lncli --network=regtest --rpcserver=localhost:10001 --lnddir=/home/lnd/.lnd getinfo"]
+  depends_on: *depends_on_bitcoin
+  expose:
+    - 9735  # P2P
+    - 10001 # RPC
+    - 8081  # REST
 
 services:  
   bitcoin:
@@ -32,18 +44,8 @@ services:
       - bitcoin:/home/bitcoin/.bitcoin
 
   mostro_lnd:
-    build:
-      context: ./docker/lnd
-    restart: unless-stopped
+    <<: *lnd-service
     command: 'lnd --alias=mostro_lnd --externalip=mostro_lnd --tlsextradomain=mostro_lnd --tlsextradomain=host.docker.internal'
-    healthcheck:
-      <<: *healthcheck
-      test: ["CMD-SHELL", "lncli --network=regtest --rpcserver=localhost:10001 --lnddir=/home/lnd/.lnd getinfo"]
-    depends_on: *depends_on_bitcoin
-    expose:
-      - 9735  # P2P
-      - 10001 # RPC
-      - 8081  # REST
     ports:
       - '${MOSTRO_LND_RPC_LOCAL_PORT:-10001}:10001'
       - '${MOSTRO_LND_REST_LOCAL_PORT:-8081}:8081'
@@ -51,34 +53,14 @@ services:
       - mostro_lnd:/home/lnd/.lnd
   
   alice_lnd:
-    build:
-      context: ./docker/lnd
-    restart: unless-stopped
+    <<: *lnd-service
     command: 'lnd --alias=alice_lnd --externalip=alice_lnd --tlsextradomain=alice_lnd --tlsextradomain=host.docker.internal'
-    healthcheck:
-      <<: *healthcheck
-      test: ["CMD-SHELL", "lncli --network=regtest --rpcserver=localhost:10001 --lnddir=/home/lnd/.lnd getinfo"]
-    depends_on: *depends_on_bitcoin
-    expose:
-      - 9735  # P2P
-      - 10001 # RPC
-      - 8081  # REST
     volumes:
       - alice_lnd:/home/lnd/.lnd
   
   bob_lnd:
-    build:
-      context: ./docker/lnd
-    restart: unless-stopped
+    <<: *lnd-service
     command: 'lnd --alias=bob_lnd --externalip=bob_lnd --tlsextradomain=bob_lnd --tlsextradomain=host.docker.internal'
-    healthcheck:
-      <<: *healthcheck
-      test: ["CMD-SHELL", "lncli --network=regtest --rpcserver=localhost:10001 --lnddir=/home/lnd/.lnd getinfo"]
-    depends_on: *depends_on_bitcoin
-    expose:
-      - 9735  # P2P
-      - 10001 # RPC
-      - 8081  # REST
     volumes:
       - bob_lnd:/home/lnd/.lnd
 
