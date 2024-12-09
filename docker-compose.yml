@@ -1,59 +1,125 @@
-services:
-  bitcoind:
-    hostname: bitcoind
-    image: boltz/bitcoin-core:27.1
-    command: "-regtest -fallbackfee=0.00000253 -zmqpubrawtx=tcp://0.0.0.0:29000 -zmqpubrawblock=tcp://0.0.0.0:29001 -zmqpubhashblock=tcp://0.0.0.0:29002 -txindex -rpcallowip=0.0.0.0/0 -rpcbind=0.0.0.0 -rpcuser=mostro -rpcpassword=mostro -addresstype=bech32 -changetype=bech32 -dbcache=2048 -rpcworkqueue=256"
-    ports:
-      - 18443:18443
-      - 18444:18444
-    expose:
-      - 29000
-      - 29001
-      - 29002
-      - 18443
-      - 18444
+x-healthcheck: &healthcheck
+  interval: 10s
+  timeout: 10s
+  retries: 10
+  start_period: 1m
+x-depends-on-bitcoin: &depends_on_bitcoin
+  bitcoin:
+    condition: service_healthy
+    restart: true
+x-lnd-service: &lnd-service
+  build:
+    context: ./docker/lnd
+  restart: unless-stopped
+  healthcheck:
+    <<: *healthcheck
+    test: ["CMD-SHELL", "lncli --network=regtest --rpcserver=localhost:10001 --lnddir=/home/lnd/.lnd getinfo"]
+  depends_on: *depends_on_bitcoin
+  expose:
+    - 9735  # P2P
+    - 10001 # RPC
+    - 8081  # REST
 
-  lnd:
-    hostname: lnd
-    depends_on:
-      - bitcoind
-    image: boltz/lnd:0.18.2-beta
-    restart: on-failure
-    entrypoint: "sh -c 'sleep 20; lnd --listen=lnd:9735 --rpclisten=lnd:10001 --restlisten=lnd:8081 --bitcoin.active --bitcoin.regtest --bitcoin.node=bitcoind --bitcoind.rpchost=bitcoind --bitcoind.zmqpubrawtx=bitcoind:29000 --bitcoind.zmqpubrawblock=bitcoind:29001 --bitcoind.rpcuser=mostro --bitcoind.rpcpass=mostro --noseedbackup --protocol.wumbo-channels'"
-    ports:
-      - "10001:10001" 
-      - "9735:9735"
-      - "8081:8081"
-    expose:
-      - 8081
-      - 9735
-      - 10001
-    volumes:
-      - ./data/lnd:/root/.lnd/
-
-  mostro:
-    hostname: mostro
-    depends_on:
-      - lnd
+services:  
+  bitcoin:
     build:
-      #context: ..
-      dockerfile: ./mostro/docker/Dockerfile
-    volumes:
-      - ./mostro/config/:/config  # settings.toml and mostro.db
-      - ./mostro/docker/data/lnd:/lnd # LND data
-    platform: linux/amd64
-
-  nostr-relay:
-    hostname: nostr-relay
-    depends_on:
-      - lnd
-    image: scsibug/nostr-rs-relay:latest
-    container_name: nostr-relay
+      context: ./docker/bitcoin
+    restart: unless-stopped
+    command: "bitcoind -debug=${MOSTRO_BITCOIN_DEBUG:-0}"
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "bitcoin-cli -regtest -rpcport=18443 -rpcuser=bitcoin -rpcpassword=bitcoin getblockchaininfo"]
+    expose:
+      - 18443 # RPC
+      - 18444 # P2P
+      - 29000 # ZMQ TX
+      - 29001 # ZMQ BLOCK
+      - 29002 # ZMQ HASH BLOCK
     ports:
-      - '${MOSTRO_RELAY_LOCAL_PORT:-7100}:8080'
+      - '${MOSTRO_BITCOIN_RPC_LOCAL_PORT:-18443}:18443'
+      - '${MOSTRO_BITCOIN_ZMQTX_LOCAL_PORT:-29000}:29000'
+      - '${MOSTRO_BITCOIN_ZMQBLOCK_LOCAL_PORT:-29001}:29001'
+      - '${MOSTRO_BITCOIN_ZMQHASHBLOCK_LOCAL_PORT:-29002}:29002'
     volumes:
-      - './mostro/data:/usr/src/app/db:Z'
-      - './mostro/relay/config.toml:/usr/src/app/config.toml:ro,Z'
+      - bitcoin:/home/bitcoin/.bitcoin
+
+  mostro_lnd:
+    <<: *lnd-service
+    command: 'lnd --alias=mostro_lnd --externalip=mostro_lnd --tlsextradomain=mostro_lnd --tlsextradomain=host.docker.internal'
+    ports:
+      - '${MOSTRO_LND_RPC_LOCAL_PORT:-10001}:10001'
+      - '${MOSTRO_LND_REST_LOCAL_PORT:-8081}:8081'
+    volumes:
+      - mostro_lnd:/home/lnd/.lnd
+  
+  alice_lnd:
+    <<: *lnd-service
+    command: 'lnd --alias=alice_lnd --externalip=alice_lnd --tlsextradomain=alice_lnd --tlsextradomain=host.docker.internal'
+    volumes:
+      - alice_lnd:/home/lnd/.lnd
+  
+  bob_lnd:
+    <<: *lnd-service
+    command: 'lnd --alias=bob_lnd --externalip=bob_lnd --tlsextradomain=bob_lnd --tlsextradomain=host.docker.internal'
+    volumes:
+      - bob_lnd:/home/lnd/.lnd
+
+  thunderhub:
+    build:
+      context: ./docker/thunderhub
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "netstat -an | grep :3000"]
+    environment:
+      SSO_SERVER_URL: mostro_lnd:10001
+    expose:
+      - 3000  # HTTP
+    ports:
+      - '${MOSTRO_THUNDERHUB_LOCAL_PORT:-3000}:3000'
+    depends_on:
+      mostro_lnd:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - mostro_lnd:/lnd
+
+  nostr_relay:
+    build:
+      context: ./docker/nostr_relay
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "nak relay nostr_relay:8080"]
+    expose:
+      - 8080  # WS
+    ports:
+      - '${MOSTRO_NOSTR_RELAY_LOCAL_PORT:-8080}:8080'
+    volumes:
+      - nostr_relay:/home/dev/.nostr_relay
+  
+  mostro:
+    build:
+      context: ./docker/mostro
+    restart: unless-stopped
+    healthcheck:
+      <<: *healthcheck
+      test: ["CMD-SHELL", "nak req -k 38383 -a 724497f34e6c4f55f9aa90f5e9dcc326c76a9f2ed817b0f0eb940ee7218ac8d5 ws://nostr_relay:8080 | jq -r '.tags[][0]' | grep mostro_pubkey"]
+    depends_on:
+      mostro_lnd:
+        condition: service_healthy
+        restart: true
+      nostr_relay:
+        condition: service_healthy
+        restart: true
+    volumes:
+      - mostro:/home/mostro/.mostro
+      - mostro_lnd:/lnd
 
 volumes:
-  lnbits-data:
+  bitcoin:
+  mostro_lnd:
+  alice_lnd:
+  bob_lnd:
+  nostr_relay:
+  mostro:
