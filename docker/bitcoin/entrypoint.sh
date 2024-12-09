@@ -14,14 +14,14 @@ if ! id bitcoin > /dev/null 2>&1; then
   chown -R $USERID:$GROUPID /home/bitcoin
 fi
 
-if [ $(echo "$1" | cut -c1) = "-" ]; then
+if [ "$(echo "$1" | cut -c1)" = "-" ]; then
   echo "$0: assuming arguments for bitcoind"
 
   set -- bitcoind "$@"
 fi
 
 if [ "$1" = "bitcoind" ] || [ "$1" = "bitcoin-cli" ] || [ "$1" = "bitcoin-tx" ]; then
-  echo "Running as bitcoin user: $@"
+  echo "Running as bitcoin user: $*"
   exec gosu bitcoin "$@"
 fi
 

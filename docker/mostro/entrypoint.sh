@@ -14,14 +14,14 @@ if ! id mostro > /dev/null 2>&1; then
   chown -R $USERID:$GROUPID /home/mostro
 fi
 
-if [ $(echo "$1" | cut -c1) = "-" ]; then
+if [ "$(echo "$1" | cut -c1)" = "-" ]; then
   echo "$0: assuming arguments for mostrod"
 
   set -- mostrod "$@"
 fi
 
 if [ "$1" = "mostrod" ] || [ "$1" = "mostro-cli" ]; then
-  echo "Running as mostro user: $@"
+  echo "Running as mostro user: $*"
   exec gosu mostro "$@"
 fi
 

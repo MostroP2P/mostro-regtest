@@ -14,14 +14,14 @@ if ! id dev > /dev/null 2>&1; then
   chown -R $USERID:$GROUPID /home/dev
 fi
 
-if [ $(echo "$1" | cut -c1) = "-" ]; then
+if [ "$(echo "$1" | cut -c1)" = "-" ]; then
   echo "$0: assuming arguments for nostr-rs-relay"
 
   set -- nostr-rs-relay "$@"
 fi
 
 if [ "$1" = "nostr-rs-relay"  ] || [ "$1" = "nak" ]; then
-  echo "Running as dev user: $@"
+  echo "Running as dev user: $*"
   exec gosu dev "$@"
 fi
 

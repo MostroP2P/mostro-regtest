@@ -14,14 +14,14 @@ if ! id lnd > /dev/null 2>&1; then
   chown -R $USERID:$GROUPID /home/lnd
 fi
 
-if [ $(echo "$1" | cut -c1) = "-" ]; then
+if [ "$(echo "$1" | cut -c1)" = "-" ]; then
   echo "$0: assuming arguments for lnd"
 
   set -- lnd "$@"
 fi
 
 if [ "$1" = "lnd" ] || [ "$1" = "lncli" ]; then
-  echo "Running as lnd user: $@"
+  echo "Running as lnd user: $*"
   exec gosu lnd "$@"
 fi
 
