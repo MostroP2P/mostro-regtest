@@ -32,7 +32,7 @@ RUN apt-get update && \
     && install target/release/mostro-cli /usr/local/bin \
     && cd .. \
     && rm -rf mostro-cli \
-    # Instalar nak antes de la limpieza
+     # Install nak before cleanup
     && BIN_URL=$(curl -s https://api.github.com/repos/fiatjaf/nak/releases/latest | grep -oP '"browser_download_url":\s*"\K[^"]+' | grep linux-amd64) \
     && TMP_DIR=$(mktemp -d) \
     && cd $TMP_DIR \
@@ -40,7 +40,7 @@ RUN apt-get update && \
     && install ${BIN_URL##*/} /usr/local/bin/nak \
     && cd - \
     && rm -rf $TMP_DIR \
-    # Limpieza para reducir el tamaño de la imagen
+    # clean 
     && apt-get remove -y git build-essential \
     && apt-get autoremove -y \
     && apt-get clean \
