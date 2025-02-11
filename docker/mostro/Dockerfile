@@ -17,24 +17,35 @@ RUN BIN_URL=$(curl -s https://api.github.com/repos/MostroP2P/mostro/releases/lat
   && rm -rf $TMP_DIR
 
 # install mostro-cli
-RUN BIN_URL=$(curl -s https://api.github.com/repos/MostroP2P/mostro-cli/releases/latest | grep -oP '"browser_download_url":\s*"\K[^"]+' | grep x86_64 | grep linux-musl) \
-  && TMP_DIR=$(mktemp -d) \
-  && cd $TMP_DIR \
-  && curl -SLO $BIN_URL \
-  && tar -xzf ${BIN_URL##*/} \
-  && DIR_NAME=${BIN_URL##*mostro-cli-} && DIR_NAME=${DIR_NAME%.tar.gz} \
-  && install $DIR_NAME/mostro-cli /usr/local/bin \
-  && cd - \
-  && rm -rf $TMP_DIR
-
-# install nak nostr tool
-RUN BIN_URL=$(curl -s https://api.github.com/repos/fiatjaf/nak/releases/latest | grep -oP '"browser_download_url":\s*"\K[^"]+' | grep linux-amd64) \
-  && TMP_DIR=$(mktemp -d) \
-  && cd $TMP_DIR \
-  && curl -SLO $BIN_URL \
-  && install ${BIN_URL##*/} /usr/local/bin/nak \
-  && cd - \
-  && rm -rf $TMP_DIR
+RUN apt-get update && \
+    apt-get install -y \
+    git \
+    curl \
+    build-essential \
+    pkg-config \
+    libssl-dev \
+    && curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y \
+    && . $HOME/.cargo/env \
+    && git clone https://github.com/MostroP2P/mostro-cli.git \
+    && cd mostro-cli \
+    && cargo build --release \
+    && install target/release/mostro-cli /usr/local/bin \
+    && cd .. \
+    && rm -rf mostro-cli \
+    # Instalar nak antes de la limpieza
+    && BIN_URL=$(curl -s https://api.github.com/repos/fiatjaf/nak/releases/latest | grep -oP '"browser_download_url":\s*"\K[^"]+' | grep linux-amd64) \
+    && TMP_DIR=$(mktemp -d) \
+    && cd $TMP_DIR \
+    && curl -SLO $BIN_URL \
+    && install ${BIN_URL##*/} /usr/local/bin/nak \
+    && cd - \
+    && rm -rf $TMP_DIR \
+    # Limpieza para reducir el tamaño de la imagen
+    && apt-get remove -y git build-essential \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf $HOME/.cargo
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod a+x /entrypoint.sh
